@@ -1,0 +1,106 @@
+//
+//  RegionListViewController.m
+//  EmergencyApp
+//
+//  Created by Jithu on 3/16/15.
+//  Copyright (c) 2015 toobler. All rights reserved.
+//
+
+#import "RegionListViewController.h"
+#import "Constants.h"
+#import "ConnectionRegionListController.h"
+
+@interface RegionListViewController ()
+
+@end
+
+@implementation RegionListViewController
+
+@synthesize clientRegionListTableView;
+@synthesize clientRegionListArray;
+
+
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    clientRegionListArray = [[NSMutableArray alloc] init];
+    
+  //CALLING API TO DIPLAY REGION LIST FROM SERVER
+     ConnectionRegionListController *connectionRegionList=[[ConnectionRegionListController alloc]init];
+    [connectionRegionList GlobalWebserviceConnectivityWithResponseValue:nil baseUrl:[NSString stringWithFormat:@"%@:%@%@",BaseURL,PORT,RegionListURL] Completion:^(NSMutableDictionary *iData){
+        
+        clientRegionListArray = [iData valueForKey:@"regions"];
+        
+        [clientRegionListTableView reloadData];
+    }];
+    
+    
+    // Do any additional setup after loading the view.
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 1;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section;
+{
+    
+        return [clientRegionListArray count];
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath;
+{
+    
+    static NSString *cellIdentifier=@"cellIdentifier";
+    UITableViewCell *cell=[tableView dequeueReusableCellWithIdentifier:cellIdentifier];
+    if (cell==nil) {
+        cell=[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
+    }
+    
+    cell.textLabel.text=[[clientRegionListArray objectAtIndex:indexPath.row] valueForKey:@"description"];
+    return cell;
+
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath;
+{
+    if ([[clientRegionListArray objectAtIndex:indexPath.row]valueForKey:@"clientPassword"]) {
+        
+    NSString * message = [NSString stringWithFormat:@"Do you want to login this Region."];
+    UIAlertView * RegionPasswordView = [[UIAlertView alloc] initWithTitle:@"" message:message delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Ok", nil];
+        RegionPasswordView.tag = indexPath.row;
+    self.clientRegionPasswordView = RegionPasswordView;
+    RegionPasswordView.alertViewStyle =  UIAlertViewStyleSecureTextInput;
+    UITextField * regionIDTextField = [self.clientRegionPasswordView textFieldAtIndex:0];
+    regionIDTextField.placeholder = @"Password";
+    [RegionPasswordView show];
+    }
+    
+    [tableView reloadData];
+}
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{
+    
+    if(buttonIndex == 1){
+        UITextField * passwordTextFileld = [alertView textFieldAtIndex:0];
+        if([[[clientRegionListArray objectAtIndex:alertView.tag]valueForKey:@"clientPassword"]isEqualToString:passwordTextFileld.text ]){
+            
+            
+        }else{
+            [alertView dismissWithClickedButtonIndex:0 animated:YES];
+            // SHOW INVALID PASSWORD ALERT
+        }
+    }
+    
+}
+
+
+
+@end
